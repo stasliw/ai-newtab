@@ -5,6 +5,7 @@ import { btn } from "./ui";
 
 export function SettingsModal({
   initialPrompt,
+  initialInterests,
   blockedSites,
   model,
   onChangeModel,
@@ -16,6 +17,7 @@ export function SettingsModal({
   onSave,
 }: {
   initialPrompt: string;
+  initialInterests: string;
   blockedSites: string[];
   model: HomepageModel;
   onChangeModel: (next: HomepageModel) => void;
@@ -24,9 +26,10 @@ export function SettingsModal({
   intervalHours: number;
   onChangeInterval: (next: number) => void;
   onClose: () => void;
-  onSave: (prompt: string, blockedSites: string[]) => void;
+  onSave: (prompt: string, interests: string, blockedSites: string[]) => void;
 }) {
   const [draft, setDraft] = useState(initialPrompt);
+  const [interestsDraft, setInterestsDraft] = useState(initialInterests);
   const [blockedDraft, setBlockedDraft] = useState(blockedSites.join("\n"));
 
   return (
@@ -44,6 +47,20 @@ export function SettingsModal({
     >
       <div style={{ backgroundColor: "white", borderRadius: 8, padding: 24, width: "90%", maxWidth: 600, maxHeight: "90vh", overflowY: "auto" }}>
         <h2 style={{ marginTop: 0, color: "#333" }}>Customize your homepage</h2>
+        <label style={{ display: "block", color: "#333", fontSize: 14 }}>
+          Interests
+          <textarea
+            value={interestsDraft}
+            onChange={(e) => setInterestsDraft(e.target.value)}
+            aria-describedby="interests-help"
+            placeholder={"AI research: https://arxiv.org/list/cs.AI/recent\nFormula 1\nPersonal finance"}
+            style={{ width: "100%", boxSizing: "border-box", minHeight: 100, marginTop: 8, padding: 12, fontSize: 14, borderRadius: 4, border: "1px solid #ddd", fontFamily: "inherit" }}
+          />
+        </label>
+        <p id="interests-help" style={{ color: "#888", fontSize: 12, margin: "6px 0 16px" }}>
+          One per line, optionally followed by source URLs. When set, your homepage is built from
+          these only and your browsing history is never read. Leave empty to use your history.
+        </p>
         <p style={{ color: "#666" }}>Standing instructions applied to every build.</p>
         <textarea
           value={draft}
@@ -141,7 +158,7 @@ export function SettingsModal({
           >
             Cancel
           </button>
-          <button onClick={() => onSave(draft, normalizeBlockList(blockedDraft.split("\n")))} style={btn}>
+          <button onClick={() => onSave(draft, interestsDraft, normalizeBlockList(blockedDraft.split("\n")))} style={btn}>
             Save &amp; rebuild
           </button>
         </div>

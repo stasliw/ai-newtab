@@ -81,7 +81,7 @@ function agentDefinition(model: HomepageModel) {
   return {
     name: AGENT_NAME,
     model,
-    description: "Builds a personalized homepage from the user's browsing history.",
+    description: "Builds a personalized homepage from the user's browsing history or chosen interests.",
     system: HOMEPAGE_SYSTEM_PROMPT,
     tools: [
       {
@@ -103,7 +103,7 @@ function agentDefinition(model: HomepageModel) {
         description:
           "Returns a ranked digest of the user's most-visited domains over a recent " +
           "window: visit counts, unique page counts, last-visit timestamps, relevance " +
-          "scores, and a few sample page titles per domain. Call this first, once.",
+          "scores, and a few sample page titles per domain. Call this first, once, unless the user chose interests (then it is disabled).",
         input_schema: GET_HISTORY_SCHEMA,
       },
       {

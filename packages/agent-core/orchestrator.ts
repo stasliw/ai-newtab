@@ -36,6 +36,12 @@ export interface RunOptions {
   store: KVStore;
   userSystemPrompt?: string;
   /**
+   * Interest areas, one per entry. When non-empty the build runs in interests
+   * mode: the agent is told to skip history, and `getHistory` is refused here so
+   * no browsing history is read or sent.
+   */
+  interests?: string[];
+  /**
    * Hosts the tools must never read. A getter is re-read before every tool call,
    * so a list saved mid-build applies to the rest of that build.
    */
@@ -100,6 +106,9 @@ export async function runHomepageBuild(opts: RunOptions): Promise<HomepageBuildR
       let result: GetHistoryResult | GetPageHtmlResult;
       switch (event.name) {
         case "getHistory":
+          if (opts.interests?.length) {
+            throw new Error("getHistory is disabled: the user chose interests. Scrape pages for those interests instead.");
+          }
           result = await runGetHistory(event, bridge, emit, blockedSites);
           break;
         case "getPageHtml":
@@ -203,6 +212,7 @@ export async function runHomepageBuild(opts: RunOptions): Promise<HomepageBuildR
                   text: buildKickoffMessage({
                     now: opts.now ?? new Date(),
                     userSystemPrompt: opts.userSystemPrompt,
+                    interests: opts.interests,
                   }),
                 },
               ],

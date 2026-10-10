@@ -17,6 +17,7 @@ export const KEYS = {
   ...AGENT_KEYS,
   homepage: "homepageData",
   systemPrompt: "systemPrompt",
+  interests: "interests",
   blockedSites: "blockedSites",
   model: "model",
   autoRebuild: "autoRebuild",
@@ -37,6 +38,8 @@ export interface Homepage {
 export interface Settings {
   apiKey: string | null;
   systemPrompt: string;
+  /** Free text, one interest per line. Non-empty switches builds from history to interests. */
+  interests: string;
   blockedSites: string[];
   model: HomepageModel;
   /** Unset means on — auto-rebuild is opt-out. */
@@ -62,6 +65,7 @@ export async function loadSettings(): Promise<Settings> {
   const s = await browser.storage.local.get([
     KEYS.apiKey,
     KEYS.systemPrompt,
+    KEYS.interests,
     KEYS.blockedSites,
     KEYS.model,
     KEYS.autoRebuild,
@@ -71,6 +75,7 @@ export async function loadSettings(): Promise<Settings> {
   return {
     apiKey: (s[KEYS.apiKey] as string | undefined) ?? null,
     systemPrompt: (s[KEYS.systemPrompt] as string | undefined) ?? "",
+    interests: (s[KEYS.interests] as string | undefined) ?? "",
     blockedSites: (s[KEYS.blockedSites] as string[] | undefined) ?? [...DEFAULT_BLOCKED_SITES],
     // Fall back if a stored model is no longer offered.
     model: MODEL_CHOICES.find((m) => m.id === model)?.id ?? DEFAULT_MODEL,
@@ -79,7 +84,7 @@ export async function loadSettings(): Promise<Settings> {
   };
 }
 
-export async function saveSetting<K extends "apiKey" | "systemPrompt" | "blockedSites" | "model" | "autoRebuild" | "rebuildIntervalHours">(
+export async function saveSetting<K extends "apiKey" | "systemPrompt" | "interests" | "blockedSites" | "model" | "autoRebuild" | "rebuildIntervalHours">(
   key: K,
   value: Settings[K],
 ): Promise<void> {

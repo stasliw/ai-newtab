@@ -8,6 +8,7 @@ export const HOMEPAGE_SYSTEM_PROMPT = `You build a personalized browser homepage
 
 You have four capabilities:
 - getHistory (custom tool) — a ranked digest of the user's most-visited domains.
+  Unavailable in interests mode (see below).
 - getPageHtml (custom tool) — loads URLs in the user's REAL browser and mounts the
   sanitized HTML into your sandbox. Authenticated, JS-rendered pages work: the
   logged-in timeline, the private dashboard, the subscribed newsletter.
@@ -51,6 +52,25 @@ You have four capabilities:
 
 6. Write a single React component to ${OUTPUT_PATH} using the write tool.
 
+## Interests mode
+
+If the kickoff message contains an "Interests" list, the user has chosen the topics
+themselves and the browsing history is OFF LIMITS. Do not call getHistory (it is
+disabled and will return an error). Replace steps 1 and 2 with:
+
+- Treat each line as one interest area. A line may be a bare topic ("Formula 1"),
+  a topic followed by URLs ("AI research: https://arxiv.org/list/cs.AI/recent"),
+  or just a URL.
+- Scrape any URL the user gave you. For an interest with no URL, pick the one or
+  two public pages most likely to carry fresh, datable content on that topic (a
+  news section front page, a topic or tag page, a well-known forum or subreddit).
+  Never invent a URL you are not confident exists.
+- Spread the 8-page budget across the interests so each one is represented; give
+  more pages to interests the user listed first.
+- Organize the homepage by interest, not by source.
+
+Steps 3 onward are unchanged.
+
 ## The component contract
 
 - One functional component named PersonalizedHomepage, \`export default\`.
@@ -78,6 +98,16 @@ built and why. Do not paste the component source into your reply.`;
 export interface KickoffInput {
   now: Date;
   userSystemPrompt?: string;
+  /** One interest area per entry. When non-empty the build runs in interests mode. */
+  interests?: string[];
+}
+
+/** Split the free-text Settings field into interest lines, dropping blanks and # comments. */
+export function parseInterests(text: string): string[] {
+  return text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"));
 }
 
 export function getTimeOfDay(date: Date): "morning" | "afternoon" | "evening" | "night" {
@@ -88,7 +118,7 @@ export function getTimeOfDay(date: Date): "morning" | "afternoon" | "evening" | 
   return "night";
 }
 
-export function buildKickoffMessage({ now, userSystemPrompt }: KickoffInput): string {
+export function buildKickoffMessage({ now, userSystemPrompt, interests = [] }: KickoffInput): string {
   const dateLine = now.toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -102,11 +132,16 @@ export function buildKickoffMessage({ now, userSystemPrompt }: KickoffInput): st
     `Context:`,
     `- Date: ${dateLine}`,
     `- Time of day: ${getTimeOfDay(now)}`,
+    interests.length
+      ? `\nInterests (browsing history is disabled; build only from these):\n${interests.map((i) => `- ${i}`).join("\n")}`
+      : ``,
     userSystemPrompt?.trim()
       ? `\nThe user's standing instructions (these take priority over your defaults):\n${userSystemPrompt.trim()}`
       : ``,
     ``,
-    `Start with getHistory, then scrape, then write ${OUTPUT_PATH}.`,
+    interests.length
+      ? `Skip getHistory. Scrape pages for the interests above, then write ${OUTPUT_PATH}.`
+      : `Start with getHistory, then scrape, then write ${OUTPUT_PATH}.`,
   ]
     .filter(Boolean)
     .join("\n");

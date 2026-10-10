@@ -10,6 +10,10 @@ rebuilds itself in the background, so each new tab is up to date.
 ![An example homepage in a morning-newspaper style](docs/preview.png)
 <sub>Illustration. Your homepage is built from your own browsing, so its stories will be different.</sub>
 
+**Prefer to pick your own topics?** In Settings, add an **Interests** list (one per
+line, optionally with source URLs). When it's set, the homepage is built from those
+topics only and your browsing history is never read. Clear it to go back to history.
+
 A morning newspaper is just one look. You can describe any look and the next build
 follows it: a quiet one-column digest, a dense dashboard, a green-on-black
 terminal, a zine.

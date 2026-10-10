@@ -15,6 +15,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [interests, setInterests] = useState("");
   const [blockedSites, setBlockedSites] = useState<string[]>(DEFAULT_BLOCKED_SITES);
   const [model, setModel] = useState<HomepageModel>(DEFAULT_MODEL);
   const [autoRebuild, setAutoRebuild] = useState(true);
@@ -48,6 +49,7 @@ export default function App() {
         ]);
         setApiKey(settings.apiKey);
         setSystemPrompt(settings.systemPrompt);
+        setInterests(settings.interests);
         setBlockedSites(settings.blockedSites);
         setModel(settings.model);
         setAutoRebuild(settings.autoRebuild);
@@ -66,8 +68,13 @@ export default function App() {
   }, []);
 
   const savePrompt = useCallback(
-    async (prompt: string, sites: string[]) => {
-      await Promise.all([saveSetting("systemPrompt", prompt), saveSetting("blockedSites", sites)]);
+    async (prompt: string, interestsText: string, sites: string[]) => {
+      await Promise.all([
+        saveSetting("systemPrompt", prompt),
+        saveSetting("interests", interestsText),
+        saveSetting("blockedSites", sites),
+      ]);
+      setInterests(interestsText);
       setBlockedSites(sites);
       setSystemPrompt(prompt);
       setShowSettings(false);
@@ -208,6 +215,7 @@ export default function App() {
       {showSettings && (
         <SettingsModal
           initialPrompt={systemPrompt}
+          initialInterests={interests}
           blockedSites={blockedSites}
           model={model}
           onChangeModel={changeModel}
